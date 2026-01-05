@@ -160,8 +160,18 @@ async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T
         ...options.headers,
     };
 
+    // Add timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     try {
-        const response = await fetch(url, { ...options, headers });
+        const response = await fetch(url, {
+            ...options,
+            headers,
+            signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
         const isJson = response.headers.get('content-type')?.includes('application/json');
         const data = isJson ? await response.json() : await response.text();
 
@@ -177,6 +187,10 @@ async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T
 
         return data as T;
     } catch (error) {
+        clearTimeout(timeoutId);
+        if (error instanceof Error && error.name === 'AbortError') {
+            throw new Error('Délai dépassé - vérifiez votre connexion');
+        }
         throw error;
     }
 }
