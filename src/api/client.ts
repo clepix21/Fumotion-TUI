@@ -3,16 +3,43 @@
  * Handles all HTTP requests to the backend API
  */
 
-import Conf from 'conf';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { homedir } from 'os';
+import { join } from 'path';
 
-// Config store for persistent token storage
-const config = new Conf<{ token: string | null; user: User | null }>({
-    projectName: 'fumotion-tui',
-    defaults: {
-        token: null,
-        user: null,
-    },
-});
+// ========== CONFIG STORAGE ==========
+const CONFIG_DIR = join(homedir(), '.fumotion-tui');
+const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
+
+interface ConfigData {
+    token: string | null;
+    user: User | null;
+}
+
+function loadConfig(): ConfigData {
+    try {
+        if (existsSync(CONFIG_FILE)) {
+            const data = readFileSync(CONFIG_FILE, 'utf-8');
+            return JSON.parse(data);
+        }
+    } catch {
+        // Ignore errors, return defaults
+    }
+    return { token: null, user: null };
+}
+
+function saveConfig(data: ConfigData): void {
+    try {
+        if (!existsSync(CONFIG_DIR)) {
+            mkdirSync(CONFIG_DIR, { recursive: true });
+        }
+        writeFileSync(CONFIG_FILE, JSON.stringify(data, null, 2));
+    } catch {
+        // Ignore write errors
+    }
+}
+
+let configCache: ConfigData = loadConfig();
 
 const API_URL = process.env.API_URL || 'https://fumotion.tech';
 
@@ -96,24 +123,26 @@ export interface ApiError extends Error {
 
 // ========== TOKEN MANAGEMENT ==========
 export function getToken(): string | null {
-    return config.get('token');
+    return configCache.token;
 }
 
 export function setToken(token: string | null): void {
-    config.set('token', token);
+    configCache.token = token;
+    saveConfig(configCache);
 }
 
 export function getStoredUser(): User | null {
-    return config.get('user');
+    return configCache.user;
 }
 
 export function setStoredUser(user: User | null): void {
-    config.set('user', user);
+    configCache.user = user;
+    saveConfig(configCache);
 }
 
 export function clearAuth(): void {
-    config.set('token', null);
-    config.set('user', null);
+    configCache = { token: null, user: null };
+    saveConfig(configCache);
 }
 
 export function isAuthenticated(): boolean {
