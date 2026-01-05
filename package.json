@@ -24,7 +24,6 @@
   "license": "MIT",
   "dependencies": {
     "chalk": "^5.3.0",
-    "conf": "^13.0.1",
     "ink": "^5.1.0",
     "ink-select-input": "^6.0.0",
     "ink-spinner": "^5.0.0",
