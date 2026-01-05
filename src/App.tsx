@@ -140,7 +140,7 @@ export function App(): React.ReactElement {
 
     // Backend offline warning
     const offlineWarning = !backendOnline && (
-        <Alert type="warning" message="⚠️ Backend inaccessible (http://137.74.47.37:5000)" />
+        <Alert type="warning" message="⚠️ Backend inaccessible (https://fumotion.tech)" />
     );
 
     // Auth screens

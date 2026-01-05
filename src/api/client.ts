@@ -14,7 +14,7 @@ const config = new Conf<{ token: string | null; user: User | null }>({
     },
 });
 
-const API_URL = process.env.API_URL || 'http://137.74.47.37:5000';
+const API_URL = process.env.API_URL || 'https://fumotion.tech';
 
 // ========== TYPES ==========
 export interface User {
