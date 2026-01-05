@@ -23,18 +23,7 @@ export function LoginScreen({ onLogin, onSwitchToRegister }: LoginScreenProps): 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    useInput((input, key) => {
-        if (key.escape) {
-            onSwitchToRegister();
-        }
-    });
-
-    const handleSubmit = async () => {
-        if (activeField === 'email') {
-            setActiveField('password');
-            return;
-        }
-
+    const doLogin = async () => {
         if (!email || !password) {
             setError('Veuillez remplir tous les champs');
             return;
@@ -50,10 +39,40 @@ export function LoginScreen({ onLogin, onSwitchToRegister }: LoginScreenProps): 
             onLogin();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Erreur de connexion');
-        } finally {
             setLoading(false);
         }
     };
+
+    useInput((input, key) => {
+        if (loading) return;
+
+        if (key.escape) {
+            onSwitchToRegister();
+            return;
+        }
+
+        if (key.return) {
+            if (activeField === 'email') {
+                if (email.trim()) {
+                    setActiveField('password');
+                }
+            } else {
+                doLogin();
+            }
+        }
+
+        if (key.tab || key.downArrow) {
+            if (activeField === 'email') {
+                setActiveField('password');
+            }
+        }
+
+        if (key.upArrow) {
+            if (activeField === 'password') {
+                setActiveField('email');
+            }
+        }
+    });
 
     if (loading) {
         return <Loading text="Connexion en cours..." />;
@@ -72,37 +91,30 @@ export function LoginScreen({ onLogin, onSwitchToRegister }: LoginScreenProps): 
             <Box flexDirection="column" marginY={1}>
                 <Box>
                     <Text color={activeField === 'email' ? 'cyan' : 'gray'}>Email: </Text>
-                    {activeField === 'email' ? (
-                        <TextInput
-                            value={email}
-                            onChange={setEmail}
-                            placeholder="email@example.com"
-                            onSubmit={handleSubmit}
-                        />
-                    ) : (
-                        <Text>{email}</Text>
-                    )}
+                    <TextInput
+                        value={email}
+                        onChange={setEmail}
+                        placeholder="email@example.com"
+                        focus={activeField === 'email'}
+                    />
                 </Box>
 
                 <Box marginTop={1}>
                     <Text color={activeField === 'password' ? 'cyan' : 'gray'}>Mot de passe: </Text>
-                    {activeField === 'password' ? (
-                        <TextInput
-                            value={password}
-                            onChange={setPassword}
-                            placeholder="••••••••"
-                            mask="*"
-                            onSubmit={handleSubmit}
-                        />
-                    ) : (
-                        <Text color="gray">{'•'.repeat(password.length || 8)}</Text>
-                    )}
+                    <TextInput
+                        value={password}
+                        onChange={setPassword}
+                        placeholder="••••••••"
+                        mask="*"
+                        focus={activeField === 'password'}
+                    />
                 </Box>
             </Box>
 
             <Box marginTop={1} flexDirection="column">
-                <Text color="gray">Appuyez sur Entrée pour {activeField === 'email' ? 'continuer' : 'vous connecter'}</Text>
-                <Text color="gray">Appuyez sur Échap pour créer un compte</Text>
+                <Text color="gray">Entrée: {activeField === 'email' ? 'passer au mot de passe' : 'se connecter'}</Text>
+                <Text color="gray">↑/↓ ou Tab: changer de champ</Text>
+                <Text color="gray">Échap: créer un compte</Text>
             </Box>
         </Box>
     );

@@ -21,9 +21,9 @@ const fieldLabels: Record<Field, string> = {
     firstName: 'Prénom',
     lastName: 'Nom',
     email: 'Email',
-    phone: 'Téléphone',
+    phone: 'Téléphone (optionnel)',
     password: 'Mot de passe',
-    confirmPassword: 'Confirmer le mot de passe',
+    confirmPassword: 'Confirmer',
 };
 
 export function RegisterScreen({ onRegister, onSwitchToLogin }: RegisterScreenProps): React.ReactElement {
@@ -41,25 +41,7 @@ export function RegisterScreen({ onRegister, onSwitchToLogin }: RegisterScreenPr
 
     const activeField = fields[activeFieldIndex];
 
-    useInput((input, key) => {
-        if (key.escape) {
-            onSwitchToLogin();
-        }
-        if (key.upArrow && activeFieldIndex > 0) {
-            setActiveFieldIndex(activeFieldIndex - 1);
-        }
-    });
-
-    const handleChange = (value: string) => {
-        setFormData({ ...formData, [activeField]: value });
-    };
-
-    const handleSubmit = async () => {
-        if (activeFieldIndex < fields.length - 1) {
-            setActiveFieldIndex(activeFieldIndex + 1);
-            return;
-        }
-
+    const doRegister = async () => {
         // Validation
         if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
             setError('Veuillez remplir tous les champs obligatoires');
@@ -91,10 +73,38 @@ export function RegisterScreen({ onRegister, onSwitchToLogin }: RegisterScreenPr
             setStoredUser(response.user);
             onRegister();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erreur lors de l\'inscription');
-        } finally {
+            setError(err instanceof Error ? err.message : "Erreur lors de l'inscription");
             setLoading(false);
         }
+    };
+
+    useInput((input, key) => {
+        if (loading) return;
+
+        if (key.escape) {
+            onSwitchToLogin();
+            return;
+        }
+
+        if (key.return) {
+            if (activeFieldIndex < fields.length - 1) {
+                setActiveFieldIndex(activeFieldIndex + 1);
+            } else {
+                doRegister();
+            }
+        }
+
+        if (key.upArrow && activeFieldIndex > 0) {
+            setActiveFieldIndex(activeFieldIndex - 1);
+        }
+
+        if ((key.downArrow || key.tab) && activeFieldIndex < fields.length - 1) {
+            setActiveFieldIndex(activeFieldIndex + 1);
+        }
+    });
+
+    const handleChange = (value: string) => {
+        setFormData({ ...formData, [activeField]: value });
     };
 
     if (loading) {
@@ -114,26 +124,19 @@ export function RegisterScreen({ onRegister, onSwitchToLogin }: RegisterScreenPr
             <Box flexDirection="column" marginY={1}>
                 {fields.map((field, index) => {
                     const isActive = index === activeFieldIndex;
-                    const isPast = index < activeFieldIndex;
                     const isPassword = field === 'password' || field === 'confirmPassword';
                     const value = formData[field];
 
                     return (
-                        <Box key={field} marginBottom={index < fields.length - 1 ? 0 : 0}>
+                        <Box key={field}>
                             <Text color={isActive ? 'cyan' : 'gray'}>{fieldLabels[field]}: </Text>
-                            {isActive ? (
-                                <TextInput
-                                    value={value}
-                                    onChange={handleChange}
-                                    placeholder={isPassword ? '••••••••' : ''}
-                                    mask={isPassword ? '*' : undefined}
-                                    onSubmit={handleSubmit}
-                                />
-                            ) : (
-                                <Text color={isPast ? 'white' : 'gray'}>
-                                    {isPassword ? '•'.repeat(value.length || 0) : value || '...'}
-                                </Text>
-                            )}
+                            <TextInput
+                                value={value}
+                                onChange={isActive ? handleChange : () => { }}
+                                placeholder={isPassword ? '••••••' : ''}
+                                mask={isPassword ? '*' : undefined}
+                                focus={isActive}
+                            />
                         </Box>
                     );
                 })}
@@ -141,9 +144,10 @@ export function RegisterScreen({ onRegister, onSwitchToLogin }: RegisterScreenPr
 
             <Box marginTop={1} flexDirection="column">
                 <Text color="gray">
-                    Appuyez sur Entrée pour {activeFieldIndex === fields.length - 1 ? 's\'inscrire' : 'continuer'}
+                    Entrée: {activeFieldIndex === fields.length - 1 ? "s'inscrire" : 'champ suivant'}
                 </Text>
-                <Text color="gray">↑ pour revenir au champ précédent • Échap pour se connecter</Text>
+                <Text color="gray">↑/↓: naviguer entre les champs</Text>
+                <Text color="gray">Échap: retour à la connexion</Text>
             </Box>
         </Box>
     );
