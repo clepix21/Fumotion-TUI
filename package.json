@@ -1,0 +1,41 @@
+{
+  "name": "fumotion-tui",
+  "version": "1.0.0",
+  "description": "Terminal User Interface for Fumotion carpooling platform",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "fumotion": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx src/index.tsx",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "cli",
+    "tui",
+    "ink",
+    "carpooling",
+    "fumotion"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "conf": "^13.0.1",
+    "ink": "^5.1.0",
+    "ink-select-input": "^6.0.0",
+    "ink-spinner": "^5.0.0",
+    "ink-text-input": "^6.0.0",
+    "react": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.0",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
